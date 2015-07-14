@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+<style>
+    .box {
+        width: 172px;
+        height: 140px;
+        background: transparent url("./images/long.png") repeat-y 0 0;
+        float: left;
+    }
+</style>
+<div id="box-0" class="box"></div>
+<div id="box-1" class="box"></div>
+<div id="box-2" class="box"></div>
+<button id="start">start</button>
+<button id="stop" disabled>stop</button>
+<div id="html">
+
+</div>
+<body>
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/requestAnimationFrame.js"></script>
+<script type="text/javascript" src="js/tween.js"></script>
+<script>
+
+var GAME = function (selector, option) {
+    var _this = this;
+    _this.config = $.extend({
+        'itemHeight': 140,
+        'imgHeight': 840
+    }, option);
+
+    this.$element = $(selector);
+    _this.itemCount = _this.config.imgHeight / _this.config.itemHeight;
+    _this.POSY = 0;
+//    _this.StepMax = 30;
+//    _this.StepCurrent = 0;
+    _this.active = false;
+}
+
+GAME.prototype = {
+
+    //执行stop后继续要走的背景偏移目标
+    getFinalPOSY: function (index) {
+        var _this = this;
+        var config = _this.config;
+        var basePOSY = Math.floor(_this.POSY / config.imgHeight) * config.imgHeight + (config.imgHeight) * 6;
+        return  basePOSY + config.itemHeight * index * -1;
+    },
+
+    //执行stop时的背景偏移距离计算出来的图
+    getIndexByPOSY: function (posy) {
+        var _this = this;
+        var config = _this.config;
+        var passCount = Math.floor(_this.POSY / config.imgHeight);
+        var diff = _this.POSY - passCount * config.imgHeight;
+        return  Math.ceil(_this.itemCount - diff / config.itemHeight);
+    },
+
+    start: function () {
+
+        var _this = this;
+        var config = _this.config;
+        var top, start, x = 0;
+        if (_this.active) {
+            return;
+        }
+        _this.active = true;
+        _this.starTime = new Date().getTime();
+        var _run = function () {
+            if (start < config.itemHeight) {
+                //缓慢启动
+                x = Tween.Cubic.easeIn(start++, 5, 1000, 100);
+            } else {
+                //随机变量
+                x = config.itemHeight * Math.random() * 10
+            }
+            //避免top数字过大
+            _this.$element.css("background-position", "0 " + (top > 10000 ? 0 : top + x) + "px");
+            _this.active && requestAnimationFrame(_run);
+        }
+        _run();
+    },
+
+    stop: function (index, callback, endCallback) {
+        var _this = this;
+        if (!_this.active) {
+            return;
+        }
+        _this.active = false;
+        var start = 0, during = 200;
+        if (index == undefined) {
+            // (随机时调用,如果制定了index 停止的目标位置不走这里)
+            index = _this.getIndexByPOSY();
+        }
+        var distance = _this.getFinalPOSY(index);
+        var top;
+        var callbacked = false;
+        var _run = function () {
+            start++;
+            top = Tween.Cubic.easeOut(start, 0, distance, during);
+            _this.$element.css("background-position", "0 " + top + "px");
+
+            if (start < during) {
+                requestAnimationFrame(_run);
+            } else {
+                endCallback && endCallback();
+            }
+            if (start > during * .2) {
+                !callbacked && callback && callback()
+            }
+        };
+        _run();
+    }
+}
+
+//配置参数
+var config = {
+    'itemHeight': 140,
+    'imgHeight': 840
+};
+var itemCount = config.imgHeight / config.itemHeight;
+
+//实例化
+var g0 = new GAME($("#box-0"), config)
+var g1 = new GAME($("#box-1"), config)
+var g2 = new GAME($("#box-2"), config)
+
+function gameStart() {
+    g0.start();
+    g1.start();
+    g2.start();
+}
+
+function gameStop(numArr, endCallback) {
+
+    g0.stop(numArr[0], function () {
+        g1.stop(numArr[1], function () {
+            g2.stop(numArr[2], null, function () {
+                endCallback && endCallback()
+            });
+        })
+    });
+}
+
+//开始
+$("#start").click(function () {
+    gameStart();
+    $("#start")[0].disabled = true;
+    $("#stop")[0].disabled = false;
+    $("#html").html("");
+
+});
+
+//结束
+$("#stop").click(function () {
+    var resultArr = [];
+    if (myRandom() == 1) {
+
+        resultArr = getWinArr();
+        gameStop(resultArr, function () {
+            $("#start")[0].disabled = false;
+            $("#stop")[0].disabled = true;
+            $("#html").html("赢了");
+        });
+
+    } else {
+
+        resultArr = getFalseArr();
+        gameStop(resultArr, function () {
+            $("#start")[0].disabled = false;
+            $("#stop")[0].disabled = true;
+            $("#html").html("输了");
+        });
+    }
+
+    console.info(resultArr)
+});
+
+//返回三个不同的数字的数组
+function getFalseArr() {
+    var a, b, c;
+    var ok = false;
+    while (!ok) {
+        var num = Math.floor(Math.random() * itemCount);
+        if (a == undefined) {
+            a = num;
+            continue;
+        }
+
+        if (b == undefined) {
+            b = num;
+
+            if (a == b) {
+                b = undefined;
+            }
+            continue;
+        }
+
+        if (c == undefined) {
+            c = num;
+
+            if (a == c || b == c) {
+                c = undefined;
+            }
+            continue;
+        }
+
+        ok = true;
+
+    }
+    return [a, b, c]
+
+}
+//返回三个相同的数字的数组
+function getWinArr() {
+    var num = Math.floor(Math.random() * itemCount);
+    return [num, num, num];
+}
+//简单的胜利机会
+//一般是后台和数据库打交道计算（一般是奖品数量一定的胜利算法）。
+function myRandom() {
+    //胜率 50%
+    var rand = Math.random();
+    if (rand < .5) return 0;
+    return 1;
+}
+
+</script>
+</body>
+</html>
