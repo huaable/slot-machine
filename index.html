@@ -51,8 +51,8 @@ GAME.prototype = {
         return  basePOSY + config.itemHeight * index * -1;
     },
 
-    //执行stop时的背景偏移距离计算出来的图
-    getIndexByPOSY: function (posy) {
+    //执行stop时最接近的图位置index
+    getIndexByPOSY: function () {
         var _this = this;
         var config = _this.config;
         var passCount = Math.floor(_this.POSY / config.imgHeight);
@@ -94,7 +94,7 @@ GAME.prototype = {
         _this.active = false;
         var start = 0, during = 200;
         if (index == undefined) {
-            // (随机时调用,如果制定了index 停止的目标位置不走这里)
+            // 停止时最接近的图的位置Index
             index = _this.getIndexByPOSY();
         }
         var distance = _this.getFinalPOSY(index);
@@ -103,7 +103,6 @@ GAME.prototype = {
             start++;
             top = Tween.Cubic.easeOut(start, 0, distance, during);
             _this.$element.css("background-position", "0 " + top + "px");
-
             if (start < during) {
                 requestAnimationFrame(_run);
             }
