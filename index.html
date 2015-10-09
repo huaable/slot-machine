@@ -133,9 +133,9 @@ function gameStart() {
 function gameStop(numArr, endCallback) {
 
     g0.stop(numArr[0], function (percent) {
-        if (percent > 0.2) {
+        if (percent > 0.2) {//第一个停止进度20%的时候开始停止第二个
             g1.stop(numArr[1], function (percent) {
-                if (percent > 0.2) {
+                if (percent > 0.2) {//第二个停止进度20%的时候开始停止第三个
                     g2.stop(numArr[2], function (percent) {
                         if (percent == 1) {
                             endCallback && endCallback()
