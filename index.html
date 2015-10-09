@@ -64,7 +64,7 @@ GAME.prototype = {
 
         var _this = this;
         var config = _this.config;
-        var top=0, start=0, x = 0;
+        var top = 0, start = 0, x = 0;
         if (_this.active) {
             return;
         }
@@ -86,7 +86,7 @@ GAME.prototype = {
     },
 
     //index 指定停止的位置
-    stop: function (index, callback, endCallback) {
+    stop: function (index, callback) {
         var _this = this;
         if (!_this.active) {
             return;
@@ -99,7 +99,6 @@ GAME.prototype = {
         }
         var distance = _this.getFinalPOSY(index);
         var top;
-        var callbacked = false;
         var _run = function () {
             start++;
             top = Tween.Cubic.easeOut(start, 0, distance, during);
@@ -107,12 +106,8 @@ GAME.prototype = {
 
             if (start < during) {
                 requestAnimationFrame(_run);
-            } else {
-                endCallback && endCallback();
             }
-            if (start > during * .2) {
-                !callbacked && callback && callback()
-            }
+            callback && callback(start / during)
         };
         _run();
     }
@@ -138,13 +133,20 @@ function gameStart() {
 
 function gameStop(numArr, endCallback) {
 
-    g0.stop(numArr[0], function () {
-        g1.stop(numArr[1], function () {
-            g2.stop(numArr[2], null, function () {
-                endCallback && endCallback()
+    g0.stop(numArr[0], function (percent) {
+        if (percent > 0.2) {
+            g1.stop(numArr[1], function (percent) {
+                if (percent > 0.2) {
+                    g2.stop(numArr[2], function (percent) {
+                        if (percent == 1) {
+                            endCallback && endCallback()
+                        }
+                    });
+                }
             });
-        })
+        }
     });
+
 }
 
 //开始
