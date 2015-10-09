@@ -64,7 +64,7 @@ GAME.prototype = {
 
         var _this = this;
         var config = _this.config;
-        var top, start, x = 0;
+        var top=0, start=0, x = 0;
         if (_this.active) {
             return;
         }
@@ -85,6 +85,7 @@ GAME.prototype = {
         _run();
     },
 
+    //index 指定停止的位置
     stop: function (index, callback, endCallback) {
         var _this = this;
         if (!_this.active) {
